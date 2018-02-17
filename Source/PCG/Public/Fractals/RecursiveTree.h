@@ -27,12 +27,9 @@ protected:
 
 private:
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAcess = "true"))
-		UParticleSystem* PSC;
-	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAcess = "true"))
 		float Distance;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAcess = "true"))
 		float Intermission;
-	TArray<class UParticleSystemComponent*> Beams;
 	void GenerateRecursive(float Start, float End, float Height,float Direction, int32 Lvl);
 	
 	

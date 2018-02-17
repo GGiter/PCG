@@ -35,10 +35,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Props)
 		void SetFractalSize(FVector NewSize);
 	TArray<TPair<FVector, FVector>>  GetPDIIntstuctions();
+	UFUNCTION(BlueprintPure, Category = Camera)
+		FVector GetCenterPoint();
+	UFUNCTION(BlueprintCallable, Category = Beams)
+		void DestroyBeams();
+	UFUNCTION(BlueprintCallable, Category = Beams)
+		TArray<class UParticleSystemComponent*> GetBeams();
+	UFUNCTION(BlueprintPure)
+		int32 GetNumOfIterations();
+	UFUNCTION(BlueprintCallable)
+		void SetNumOfIterations(int32 NewNumOfIterations);
+
 protected:
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		class UHierarchicalInstancedStaticMeshComponent* HISMActor;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		UFractalDrawComponent* DrawComponent;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 		FVector Size;
@@ -49,10 +60,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 	TArray<class UParticleSystemComponent*> Beams;
 	TArray<TPair<FVector, FVector>> PDIInstructions;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
 		int32 NumOfIterations = 4;
 private:
-	UPROPERTY(EditDefaultsOnly,BlueprintReadWrite, Category = Props, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category = Props, meta = (AllowPrivateAccess = "true"))
 		FString FractalName;
 	
 	

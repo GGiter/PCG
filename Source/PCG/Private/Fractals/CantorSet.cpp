@@ -27,19 +27,20 @@ void ACantorSet::Tick(float DeltaTime)
 }
 void ACantorSet::Generate()
 {
+	
 	Super::Generate();
-	GenerateRecursive(GetActorLocation().X, Distance,0);
+	GenerateRecursive(GetActorLocation().Y, Distance,0);
 	
 	
 }
 void ACantorSet::GenerateRecursive(float Start, float End, float Height)
 {
-	if (Size.X-Height>0)
+	if (NumOfIterations-Height>0)
 	{
 		UParticleSystemComponent* ParticleTemp;
-		ParticleTemp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PSC, GetActorLocation(), GetActorRotation(), false);
-		FVector StartBeam{ Start,GetActorLocation().Y ,GetActorLocation().Z + -Height * Intermission };
-		FVector EndBeam{ Start+End,GetActorLocation().Y ,GetActorLocation().Z + -Height * Intermission };
+		ParticleTemp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FractalPSC, GetActorLocation(), GetActorRotation(), false);
+		FVector StartBeam{ GetActorLocation().X + -Height * Intermission ,Start ,GetActorLocation().Z};
+		FVector EndBeam{ GetActorLocation().X + -Height * Intermission,Start + End ,GetActorLocation().Z};
 		ParticleTemp->SetVisibility(true);
 		ParticleTemp->SetBeamSourcePoint(0, StartBeam, 0);
 		ParticleTemp->SetBeamEndPoint(0, EndBeam);

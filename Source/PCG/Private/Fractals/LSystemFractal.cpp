@@ -30,6 +30,7 @@ void ALSystemFractal::Generate()
 {
 		Super::Generate();
 		FString Sequence = GenerateSequence(NumOfIterations);
+		ResetTurtle();
 		PenDown();
 		for (int32 i = 0; i < Sequence.Len(); ++i)
 		{

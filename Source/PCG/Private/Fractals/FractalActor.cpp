@@ -21,7 +21,7 @@ AFractalActor::AFractalActor()
 void AFractalActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	Generate();
 }
 
 // Called every frame
@@ -32,7 +32,7 @@ void AFractalActor::Tick(float DeltaTime)
 }
 void AFractalActor::Generate()
 {
-	
+	DestroyBeams();
 
 }
 void AFractalActor::SetFractalSize(FVector NewSize)
@@ -43,5 +43,58 @@ void AFractalActor::SetFractalSize(FVector NewSize)
 TArray<TPair<FVector, FVector>>  AFractalActor::GetPDIIntstuctions()
 {
 	return PDIInstructions;
+}
+
+FVector AFractalActor::GetCenterPoint()
+{
+	FVector CenterPoint = { 0.0f,0.0f,100.f };
+	for (UParticleSystemComponent* Beam : Beams)
+	{
+		FVector Temp;
+		Beam->GetBeamSourcePoint(0, 0, Temp);
+		if(Temp.X > CenterPoint.X)
+		{
+			CenterPoint.X = Temp.X;
+		}
+		if (Temp.Y > CenterPoint.Y)
+		{
+			CenterPoint.Y = Temp.Y;
+		}
+		if (Temp.Z > CenterPoint.Z)
+		{
+			CenterPoint.Z = Temp.Z;
+		}
+		
+	}
+	CenterPoint /= 2.0f;
+	CenterPoint.Z += CenterPoint.X*2.0f;
+	
+	return CenterPoint;
+}
+
+void AFractalActor::DestroyBeams()
+{
+	for (UParticleSystemComponent* Beam : Beams)
+	{
+		Beam->SetVisibility(false);
+		Beam->DestroyComponent();
+	}
+	Beams.Empty();
+	UE_LOG(LogTemp, Warning, TEXT("Angle isS"));
+}
+
+TArray<class UParticleSystemComponent*> AFractalActor::GetBeams()
+{
+	return Beams;
+}
+
+int32 AFractalActor::GetNumOfIterations()
+{
+	return NumOfIterations;
+}
+
+void AFractalActor::SetNumOfIterations(int32 NewNumOfIterations)
+{
+	NumOfIterations = NewNumOfIterations;
 }
 

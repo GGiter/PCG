@@ -27,23 +27,24 @@ void ARecursiveTree::Tick(float DeltaTime)
 }
 void ARecursiveTree::Generate()
 {
+	
 	Super::Generate();
-	GenerateRecursive(GetActorLocation().Z, Distance, 0,0,0);
+	GenerateRecursive(GetActorLocation().X, Distance, 0,0,0);
 
 
 }
 void ARecursiveTree::GenerateRecursive(float Start, float End, float Height,float Direction,int32 Lvl)
 {
-	if (Size.X - Lvl>0)
+	if (NumOfIterations - Lvl>0)
 	{
 		UParticleSystemComponent* ParticleTemp;
-		ParticleTemp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), PSC, GetActorLocation(), GetActorRotation(), false);
+		ParticleTemp = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), FractalPSC, GetActorLocation(), GetActorRotation(), false);
 		FVector StartBeam;
 		if(Lvl>0)
-		StartBeam={ GetActorLocation().X+Height  ,GetActorLocation().Y ,Start };
+		StartBeam={  Start ,GetActorLocation().Y + Height ,GetActorLocation().Z};
 		else
-		StartBeam = { GetActorLocation().X ,GetActorLocation().Y ,Start };
-		FVector EndBeam{ GetActorLocation().X + Height + Intermission*Direction,GetActorLocation().Y ,Start+End };
+		StartBeam = { Start ,GetActorLocation().Y + Height ,GetActorLocation().Z };
+		FVector EndBeam{ Start+End,GetActorLocation().Y + Height + Intermission*Direction ,GetActorLocation().Z };
 		ParticleTemp->SetVisibility(true);
 		ParticleTemp->SetBeamSourcePoint(0, StartBeam, 0);
 		ParticleTemp->SetBeamEndPoint(0, EndBeam);

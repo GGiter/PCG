@@ -23,13 +23,10 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	UPROPERTY(EditDefaultsOnly,meta=(AllowPrivateAcess="true"))
-		UParticleSystem* PSC;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAcess = "true"))
 		float Distance;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAcess = "true"))
 		float Intermission;
-	TArray<class UParticleSystemComponent*> Beams;
 		void GenerateRecursive(float Start, float End, float Height);
 	
 	

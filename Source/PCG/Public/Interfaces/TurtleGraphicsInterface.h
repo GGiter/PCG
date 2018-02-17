@@ -52,6 +52,7 @@ public:
 	FVector GetDirection() const;
 	FVector GetLocation() const;
 	void SetLocation(FVector NewLocation);
+	void ResetTurtle();
 
 private:
 	FVector Location = { 0.0f,0.0f,0.0f };

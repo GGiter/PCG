@@ -18,7 +18,7 @@ void ITurtleGraphicsInterface::TurnRight(float  Degree)
 	Right=Right.RotateAngleAxis(Degree, Axis);
 	Direction.Normalize(0.0f);
 	Right.Normalize(0.0f);
-	UE_LOG(LogTemp, Warning, TEXT("Angle is %s"), *Direction.ToString());
+	
 }
 
 void ITurtleGraphicsInterface::PitchUp(float  Degree)
@@ -133,6 +133,15 @@ FVector ITurtleGraphicsInterface::GetLocation() const
 void ITurtleGraphicsInterface::SetLocation(FVector NewLocation)
 {
 	Location = NewLocation;
+}
+
+void ITurtleGraphicsInterface::ResetTurtle()
+{
+	Location = { 0.0f,0.0f,0.0f };
+	Direction = { 0.0f,1.0f,0.0f };
+	Right = { 1.0f,0.0f,0.0f };
+	bool PenIsDown = true;
+	Stack.Empty();
 }
 
 
