@@ -15,13 +15,21 @@ class PCG_API AMengerSponge : public AFractalActor
 	GENERATED_BODY()
     public:
 		AMengerSponge();
+		UFUNCTION(BlueprintCallable)
 		virtual void Generate() override;
 		void GenerateBoxes();
+		void GenerateTransforms(FTransform BoxTransform,TArray<FTransform>& TransformArray);
+		void SpawnBoxes();
 		virtual void BeginPlay() override;
 	private:
-		float r;
+		UPROPERTY(BlueprintReadWrite,meta=(AllowPrivateAccess="true"))
+			float r;
+		UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+			float SizeR;
 		FVector Position;
 		int32 Iterations;
+		TArray<UStaticMeshComponent*> Boxes;
+		TArray<FTransform> Transforms;
 		
 	
 	
