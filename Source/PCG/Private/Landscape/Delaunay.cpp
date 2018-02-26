@@ -12,15 +12,15 @@ Delaunay::~Delaunay()
 {
 }
 
-TArray<FTriangle> Delaunay::Triangulate(TArray<FVector>& NewVertices)
+TArray<FTriangle> Delaunay::Triangulate(TArray<FVector2D>& NewVertices)
 {
 	Vertices = NewVertices;
-
+	Triangles.Empty();
+	Edges.Empty();
 	float MinX = NewVertices[0].X;
 	float MinY = NewVertices[0].Y;
-	float MinZ = NewVertices[0].Z;
-	float MaxX = MinX, MaxY = MinY, MaxZ = MinZ;
-	for (FVector Vertice : Vertices)
+	float MaxX = MinX, MaxY = MinY;
+	for (FVector2D Vertice : NewVertices)
 	{
 		if (Vertice.X < MinX)
 		{
@@ -30,10 +30,6 @@ TArray<FTriangle> Delaunay::Triangulate(TArray<FVector>& NewVertices)
 		{
 			MinY = Vertice.Y;
 		}
-		if (Vertice.Z < MinZ)
-		{
-			MinZ = Vertice.Z;
-		}
 		if (Vertice.X > MaxX)
 		{
 			MaxX = Vertice.X;
@@ -42,26 +38,20 @@ TArray<FTriangle> Delaunay::Triangulate(TArray<FVector>& NewVertices)
 		{
 			MaxY = Vertice.Y;
 		}
-		if (Vertice.Z > MaxZ)
-		{
-			MaxZ = Vertice.Z;
-		}
 	}
 
 	float dX = MaxX - MinX;
 	float dY = MaxY - MinY;
-	float dZ = MaxZ - MinZ;
-	float DeltaMax = FMath::Max3(dX, dY, dZ);
+	float DeltaMax = FMath::Max(dX, dY);
 	float MidX = (MinX + MaxX) / 2.0f;
 	float MidY = (MinY + MaxY) / 2.0f;
-	float MidZ = (MinZ + MaxZ) / 2.0f;
 
-	FVector P1(MidX - 20.0f * DeltaMax, MidY - DeltaMax, MidZ - DeltaMax);
-	FVector P2(MidX, MidY + 20.0f * DeltaMax, MidZ + 20.0f * DeltaMax);
-	FVector P3(MidX + 20.0f * DeltaMax, MidY - DeltaMax, MidZ - DeltaMax);
+	FVector2D P1(MidX - 20.0f * DeltaMax, MidY - DeltaMax);
+	FVector2D P2(MidX, MidY + 20.0f * DeltaMax);
+	FVector2D P3(MidX + 20.0f * DeltaMax, MidY - DeltaMax);
 
 	Triangles.Add(FTriangle(P1, P2, P3));
-	for (FVector Vertice : Vertices)
+	for (FVector2D Vertice : NewVertices)
 	{
 		TArray<FEdgeD> Polygon;
 		
@@ -77,23 +67,20 @@ TArray<FTriangle> Delaunay::Triangulate(TArray<FVector>& NewVertices)
 				}
 				
 			}
-			for (FTriangle Triangle : Triangles)
+			Triangles.RemoveAll([](const FTriangle Triangle)
 			{
-				if (Triangle.isBad)
-				{
-					Triangles.Remove(Triangle);
-				}
-			}
+				return Triangle.isBad;
+			});
 		
-		
+			int32 ii = 0, jj = 0;
 		//UE_LOG(LogTemp, Warning, TEXT("%d"), Triangles.Num());
-		if (Polygon.Num() > 0)
-		{
 			for (FEdgeD E1 : Polygon)
 			{
+				ii++;
 				for (FEdgeD E2 : Polygon)
 				{
-					if (Polygon.Find(E1) == Polygon.Find(E2))
+					jj++;
+					if (ii==jj)
 					{
 						continue;
 					}
@@ -104,37 +91,29 @@ TArray<FTriangle> Delaunay::Triangulate(TArray<FVector>& NewVertices)
 					}
 
 				}
+				jj = 0;
 			}
+			Polygon.RemoveAll([](const FEdgeD EdgeD)
+			{
+				return EdgeD.isBad;
+			});
 			for (FEdgeD Edge : Polygon)
 			{
-				if (Edge.isBad)
-				{
-					Polygon.Remove(Edge);
-				}
-				else
-				{
-					Triangles.Add(FTriangle(Edge.P1, Edge.P2, Vertice));
-				}
+					Triangles.Add(FTriangle(Edge.P1, Edge.P2, Vertice));	
 			}
-		}
 		
-
 	
 
 	}
-
-	for (FTriangle Triangle : Triangles)
+	Triangles.RemoveAll([P1,P2,P3](FTriangle Triangle)
 	{
-		if (Triangle.ContainsVertex(P1) || Triangle.ContainsVertex(P2) || Triangle.ContainsVertex(P3))
-		{
-			Triangles.Remove(Triangle);
-		}
-		else
-		{
+		return Triangle.ContainsVertex(P1) || Triangle.ContainsVertex(P2) || Triangle.ContainsVertex(P3);
+	});
+	for (FTriangle Triangle : Triangles)
+	{	
 			Edges.Add(Triangle.E1);
 			Edges.Add(Triangle.E2);
 			Edges.Add(Triangle.E3);
-		}
 	}
 
 	return Triangles;
@@ -150,27 +129,22 @@ const TArray<FEdgeD>& Delaunay::GetEdges() const
 	return Edges;
 }
 
-const TArray<FVector>& Delaunay::GetVertices() const
+const TArray<FVector2D>& Delaunay::GetVertices() const
 {
 	return Vertices;
 }
 
-void FTriangle::CalculateSphere()
-{
-	FVector AC = P3 - P1;
-	FVector AB = P2 - P1;
-	FVector ABXAC = FVector::CrossProduct(AB, AC);
 
-	FVector ToCircumSphereCenter = (FVector::CrossProduct(ABXAC, AB)*AC.Size() + FVector::CrossProduct(AC, ABXAC)*AB.Size()) / (2.0f*ABXAC.Size());
-	CircumSphereRadius = ToCircumSphereCenter.Size();
-	CSS = P1 + ToCircumSphereCenter;
-}
-
-bool FTriangle::CircumSphereContains(const FVector & V)
+bool FTriangle::CircumSphereContains(const FVector2D & V)
 {
-	float Dist = FMath::Square(V.X - CSS.X) + FMath::Square(V.Y - CSS.Y) + FMath::Square(V.Z - CSS.Z);
-	if (Dist < FMath::Square(CircumSphereRadius))
-		return true;
-	else
-		return false;
+	float ab = (P1.X * P1.X) + (P1.Y * P1.Y);
+	float cd = (P2.X * P2.X) + (P2.Y * P2.Y);
+	float ef = (P3.X * P3.X) + (P3.Y * P3.Y);
+
+	float circum_x = (ab * (P3.Y - P2.Y) + cd * (P1.Y - P3.Y) + ef * (P2.Y - P1.Y)) / (P1.X * (P3.Y - P2.Y) + P2.X * (P1.Y - P3.Y) + P3.X * (P2.Y - P1.Y)) / 2.f;
+	float circum_y = (ab * (P3.X - P2.X) + cd * (P1.X - P3.X) + ef * (P2.X - P1.X)) / (P1.Y * (P3.X - P2.X) + P2.Y * (P1.X - P3.X) + P3.Y * (P2.X - P1.X)) / 2.f;
+	float circum_radius = FMath::Sqrt(((P1.X - circum_x) * (P1.X - circum_x)) + ((P1.Y - circum_y) * (P1.Y - circum_y)));
+
+	float dist = FMath::Sqrt(((V.X - circum_x) * (V.X - circum_x)) + ((V.Y - circum_y) * (V.Y - circum_y)));
+	return dist <= circum_radius;
 }

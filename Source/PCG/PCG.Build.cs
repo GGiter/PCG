@@ -12,7 +12,7 @@ public class PCG : ModuleRules
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
-        PublicDependencyModuleNames.AddRange(new string[] { "ShaderCore", "RenderCore", "RHI", "RuntimeMeshComponent" });
+        PublicDependencyModuleNames.AddRange(new string[] { "ShaderCore", "RenderCore", "RHI", "RuntimeMeshComponent"});
 
         PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 		
