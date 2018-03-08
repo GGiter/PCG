@@ -40,7 +40,7 @@ void ATrackGenerator::Tick(float DeltaTime)
 	if (FTrackAlg::IsThreadFinished() && bC == false)
 	{
 		bC = true;
-		//UE_LOG(LogTemp, Warning, TEXT("TrackPoints %s , %s"), *SurroundingsHM[0][0][0].ToString(), *SurroundingsHM[0][0][1].ToString());
+		UE_LOG(LogTemp, Warning, TEXT("TrackPoints %s , %s"), *SurroundingsHM[0][0][0].ToString(), *SurroundingsHM[0][0][1].ToString());
 		BuildSpline();
 		FTrackAlg::Shutdown();
 	}
@@ -70,6 +70,7 @@ void ATrackGenerator::BuildSpline()
 		SplineMesh->SetStartAndEnd(StartPos, StartTangent*TangentScale, EndPos, EndTangent*TangentScale);
 		SplineMesh->RegisterComponent();
 		SplineMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		TrackMeshes.Add(SplineMesh);
 	}
 	//UStaticMesh* TEST=RuntimeMesh->CreateDefaultSubobject<UStaticMesh>(TEXT("TEst"));
 }

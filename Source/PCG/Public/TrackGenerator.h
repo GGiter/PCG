@@ -29,19 +29,19 @@ public:
 private:
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAcess = "true"))
 		USplineComponent* PathSpline;
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAcess = "true"))
+	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAcess = "true"))
 		UStaticMesh* RoadMesh;
 
 	TArray<FVector> TrackPoints;
 	TArray<TArray<TArray<FVector> > > SurroundingsHM;
-	TArray<USplineMeshComponent*> TrackMeshes;
+	
 	
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAcess = "true"))
 		float Steepness=0.5f;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAcess = "true"))
-		float Spacing=400.0f;
+		float Spacing=200.0f;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAcess = "true"))
-		float TangentScale=2.0f;
+		float TangentScale=1.0f;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAcess = "true"))
 		bool bAutoSpacing = false;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAcess = "true"))
@@ -52,7 +52,8 @@ private:
 		float Ellipse_Width=30000.0f;
 	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAcess = "true"),Category=Ellipse)
 		float Ellipse_Height=30000.0f;
-	
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAcess = "true"))
+		TArray<USplineMeshComponent*> TrackMeshes;
 	bool bC = false;
 	void BuildSpline();
 
