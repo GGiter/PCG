@@ -15,7 +15,7 @@ ADungeonActor::ADungeonActor()
 void ADungeonActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	Generate();
 }
 
 // Called every frame
@@ -29,6 +29,7 @@ void ADungeonActor::Tick(float DeltaTime)
 		if(PointLists.Num()>0)
 		Render();
 		
+		FDungeonAlg::Shutdown();
 	}
 }
 void ADungeonActor::Render()
@@ -63,14 +64,15 @@ void ADungeonActor::Render()
 			}
 			Vertices.Append(Temp);
 			Temp2.Append(Temp);
+			GroundIndexes.Add(NumOfSections);
 			GenerateGround(Temp2, NumOfSections);
 			NumOfSections++;
 		}
 			
 	}
+	TArray<TArray<FVector> > Check;
 	for (TArray<FVector> PointList : PointLists)
 	{
-
 		if (PointList.Num() == 4&&PointLists.Find(PointList)>=NumOfTypes[2][0])
 		{
 			TArray<FVector> Temp, Temp2;
@@ -79,18 +81,58 @@ void ADungeonActor::Render()
 			{
 				Temp.Add(FVector(Point.X, Point.Y, 100.0f));
 			}
-			Temp2.Append(Temp);
-			Temp.Empty();
-			for (FVector Point : PointList)
+			if (Check.Find(Temp) == INDEX_NONE)
 			{
-				Temp.Add(FVector(Point.X, Point.Y, 500.0f));
+				Check.Add(Temp);
+				Temp2.Append(Temp);
+				Temp.Empty();
+				for (FVector Point : PointList)
+				{
+					Temp.Add(FVector(Point.X, Point.Y, 500.0f));
+				}
+				Vertices.Append(Temp);
+				Temp2.Append(Temp);
+				HallwaysIndexes.Add(NumOfSections);
+				RenderHallways(Temp2, NumOfSections);
+				NumOfSections++;	
 			}
-			Vertices.Append(Temp);
-			Temp2.Append(Temp);
-			RenderHallways(Temp2, NumOfSections);
-			NumOfSections++;
+			
 		}
 
+	}
+	int TempCount = NumOfTypes[1][0];
+	for (TArray<FEdge> ArrayEdge : RoomsBorders)
+	{
+		TArray<FVector> Temp;
+		for (FVector Point : PointLists[TempCount])
+		{
+			Temp.Add(FVector(Point.X, Point.Y, 100.0f));
+		}
+		for (FVector Point : PointLists[TempCount])
+		{
+			Temp.Add(FVector(Point.X, Point.Y, 500.0f));
+		}
+		RoomsIndexes.Add(NumOfSections);
+		RenderRoom(ArrayEdge, Temp, NumOfSections);
+			NumOfSections++;
+			TempCount++;
+	}
+	TempCount= NumOfTypes[0][0];
+	for (TArray<FEdge> ArrayEdge : HubsBorders)
+	{
+		TArray<FVector> Temp;
+		for (FVector Point : PointLists[TempCount])
+		{
+			Temp.Add(FVector(Point.X, Point.Y, 100.0f));
+		}
+		for (FVector Point : PointLists[TempCount])
+		{
+			Temp.Add(FVector(Point.X, Point.Y, 500.0f));
+		}
+		HubsIndexes.Add(NumOfSections);
+		RenderRoom(ArrayEdge, Temp, NumOfSections);
+		NumOfSections++;
+		TempCount++;
 	}
 	int32 index = 0;
 	UE_LOG(LogTemp, Warning, TEXT("DungeonAlg is Done %d"),Vertices.Num());
@@ -370,7 +412,7 @@ void ADungeonActor::RenderHallways(TArray<FVector> NewVertices, int32 SectionInd
 	TArray<FColor> VertexColors;
 	TArray<FVector2D> TextureCoordinates;
 	TArray<int32> Triangles;
-	if (FVector::Dist(NewVertices[0],NewVertices[3])>FVector::Dist(NewVertices[0], NewVertices[1])) //vertical
+	if (FVector::Dist(NewVertices[0], NewVertices[1])==90.0f) //vertical
 	{
 		//RightSide
 		Vertices.Add(NewVertices[2]);
@@ -478,7 +520,400 @@ void ADungeonActor::RenderHallways(TArray<FVector> NewVertices, int32 SectionInd
 		Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
 		Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
 	}
-	for (int32 i = 0; i < 2; ++i)
+	for (int32 i = 0; i < 4; ++i)
+	{
+		Triangles.Add(i * 4);
+		Triangles.Add(i * 4 + 1);
+		Triangles.Add(i * 4 + 3);
+		Triangles.Add(i * 4 + 1);
+		Triangles.Add(i * 4 + 2);
+		Triangles.Add(i * 4 + 3);
+
+		VertexColors.Add(FColor::White);
+		TextureCoordinates.Add(FVector2D(0, 0));
+		VertexColors.Add(FColor::White);
+		TextureCoordinates.Add(FVector2D(0, 1));
+		VertexColors.Add(FColor::White);
+		TextureCoordinates.Add(FVector2D(1, 1));
+		VertexColors.Add(FColor::White);
+		TextureCoordinates.Add(FVector2D(1, 0));
+	}
+	RuntimeMesh->CreateMeshSection(SectionIndex, Vertices, Triangles, Normals, TextureCoordinates, VertexColors, Tangents);
+}
+void ADungeonActor::RenderRoom(TArray<FEdge> Edges, TArray<FVector> NewVertices, int32 SectionIndex)
+{
+	int32 count = 0;
+	bool Right = false, Left = false, Front = false, Back = false;
+	TArray<FVector> Vertices;
+	TArray<FVector> Normals;
+	TArray<FRuntimeMeshTangent> Tangents;
+	TArray<FColor> VertexColors;
+	TArray<FVector2D> TextureCoordinates;
+	TArray<int32> Triangles;
+	for (int i = 0; i < Edges.Num(); i += 1)
+	{
+		if (Edges[i] == FEdge(NewVertices[0], NewVertices[1]))
+		{
+			Front = true;
+			continue;
+		}
+		if (Edges[i] == FEdge(NewVertices[1], NewVertices[2]))
+		{
+			Right = true;
+			continue;
+		}
+		if (Edges[i] == FEdge(NewVertices[3], NewVertices[2]))
+		{
+			Back = true;
+			continue;
+		}
+		if (Edges[i] == FEdge(NewVertices[0],NewVertices[3]))
+		{
+			Left = true;
+			continue;
+		}
+		if (Edges[i].Vertex[0].Y == Edges[i].Vertex[1].Y)
+		{
+			if (Edges[i].Vertex[0].Y == NewVertices[0].Y)
+			{
+				Vertices.Add(NewVertices[1]);
+				Vertices.Add(NewVertices[5]);
+				Vertices.Add(FVector(Edges[i].Vertex[1].X, Edges[i].Vertex[1].Y, 500.0f));
+				Vertices.Add(Edges[i].Vertex[1]);
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Vertices.Add(NewVertices[1]);
+				Vertices.Add(NewVertices[5]);
+				Vertices.Add(FVector(Edges[i].Vertex[1].X, Edges[i].Vertex[1].Y, 500.0f));
+				Vertices.Add(Edges[i].Vertex[1]);
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+
+				Vertices.Add(Edges[i].Vertex[0]);
+				Vertices.Add(FVector(Edges[i].Vertex[0].X, Edges[i].Vertex[0].Y, 500.0f));
+				Vertices.Add(NewVertices[4]);
+				Vertices.Add(NewVertices[0]);
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Vertices.Add(Edges[i].Vertex[0]);
+				Vertices.Add(FVector(Edges[i].Vertex[0].X, Edges[i].Vertex[0].Y, 500.0f));
+				Vertices.Add(NewVertices[4]);
+				Vertices.Add(NewVertices[0]);
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				count += 4;
+				Front = true;
+			}
+			else
+			{
+				Vertices.Add(NewVertices[3]);
+				Vertices.Add(NewVertices[7]);
+				Vertices.Add(FVector(Edges[i].Vertex[0].X, Edges[i].Vertex[0].Y, 500.0f));
+				Vertices.Add(Edges[i].Vertex[0]);
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Vertices.Add(NewVertices[3]);
+				Vertices.Add(NewVertices[7]);
+				Vertices.Add(FVector(Edges[i].Vertex[0].X, Edges[i].Vertex[0].Y, 500.0f));
+				Vertices.Add(Edges[i].Vertex[0]);
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+
+				Vertices.Add(Edges[i].Vertex[1]);
+				Vertices.Add(FVector(Edges[i].Vertex[1].X, Edges[i].Vertex[1].Y, 500.0f));
+				Vertices.Add(NewVertices[6]);
+				Vertices.Add(NewVertices[2]);
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+				Vertices.Add(Edges[i].Vertex[1]);
+				Vertices.Add(FVector(Edges[i].Vertex[1].X, Edges[i].Vertex[1].Y, 500.0f));
+				Vertices.Add(NewVertices[6]);
+				Vertices.Add(NewVertices[2]);
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+				count += 4;
+				Back = true;
+			}
+		}
+		else
+		{
+			if (Edges[i].Vertex[0].X == NewVertices[0].X)
+			{
+				Vertices.Add(NewVertices[0]);
+				Vertices.Add(NewVertices[4]);
+				Vertices.Add(FVector(Edges[i].Vertex[0].X, Edges[i].Vertex[0].Y, 500.0f));
+				Vertices.Add(Edges[i].Vertex[0]);
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Vertices.Add(NewVertices[0]);
+				Vertices.Add(NewVertices[4]);
+				Vertices.Add(FVector(Edges[i].Vertex[0].X, Edges[i].Vertex[0].Y, 500.0f));
+				Vertices.Add(Edges[i].Vertex[0]);
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Vertices.Add(Edges[i].Vertex[1]);
+				Vertices.Add(FVector(Edges[i].Vertex[1].X, Edges[i].Vertex[1].Y, 500.0f));
+				Vertices.Add(NewVertices[7]);
+				Vertices.Add(NewVertices[3]);
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Vertices.Add(Edges[i].Vertex[1]);
+				Vertices.Add(FVector(Edges[i].Vertex[1].X, Edges[i].Vertex[1].Y, 500.0f));
+				Vertices.Add(NewVertices[7]);
+				Vertices.Add(NewVertices[3]);
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				count += 4;
+				Left = true;
+			}
+			else
+			{
+				Vertices.Add(NewVertices[2]);
+				Vertices.Add(NewVertices[6]);
+				Vertices.Add(FVector(Edges[i].Vertex[1].X, Edges[i].Vertex[1].Y, 500.0f));
+				Vertices.Add(Edges[i].Vertex[1]);
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Vertices.Add(NewVertices[2]);
+				Vertices.Add(NewVertices[6]);
+				Vertices.Add(FVector(Edges[i].Vertex[1].X, Edges[i].Vertex[1].Y, 500.0f));
+				Vertices.Add(Edges[i].Vertex[1]);
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Vertices.Add(Edges[i].Vertex[0]);
+				Vertices.Add(FVector(Edges[i].Vertex[0].X, Edges[i].Vertex[0].Y, 500.0f));
+				Vertices.Add(NewVertices[5]);
+				Vertices.Add(NewVertices[1]);
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+				Vertices.Add(Edges[i].Vertex[0]);
+				Vertices.Add(FVector(Edges[i].Vertex[0].X, Edges[i].Vertex[0].Y, 500.0f));
+				Vertices.Add(NewVertices[5]);
+				Vertices.Add(NewVertices[1]);
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+				count += 4;
+				Right = true;
+			}
+		}
+	}
+	if (!Right)
+	{
+		Vertices.Add(NewVertices[2]);
+		Vertices.Add(NewVertices[6]);
+		Vertices.Add(NewVertices[5]);
+		Vertices.Add(NewVertices[1]);
+		Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+		Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+		Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+		Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+		Vertices.Add(NewVertices[2]);
+		Vertices.Add(NewVertices[6]);
+		Vertices.Add(NewVertices[5]);
+		Vertices.Add(NewVertices[1]);
+		Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+		Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+		Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+		Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+
+		count += 2;
+	}
+	if (!Left)
+	{
+		
+		Vertices.Add(NewVertices[0]);
+		Vertices.Add(NewVertices[4]);
+		Vertices.Add(NewVertices[7]);
+		Vertices.Add(NewVertices[3]);
+		Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+		Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+		Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+		Normals.Add(FVector(-1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, -1.0f, 0.0f));
+		Vertices.Add(NewVertices[0]);
+		Vertices.Add(NewVertices[4]);
+		Vertices.Add(NewVertices[7]);
+		Vertices.Add(NewVertices[3]);
+		Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+		Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+		Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+		Normals.Add(FVector(1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(0.0f, 1.0f, 0.0f));
+
+		count += 2;
+		
+	}
+	if (!Front)
+	{
+		Vertices.Add(NewVertices[1]);
+		Vertices.Add(NewVertices[5]);
+		Vertices.Add(NewVertices[4]);
+		Vertices.Add(NewVertices[0]);
+		Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+		Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+		Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+		Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+		Vertices.Add(NewVertices[1]);
+		Vertices.Add(NewVertices[5]);
+		Vertices.Add(NewVertices[4]);
+		Vertices.Add(NewVertices[0]);
+		Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+		Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+		Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+		Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+
+		count += 2;
+	}
+	if (!Back)
+	{
+		
+		Vertices.Add(NewVertices[3]);
+		Vertices.Add(NewVertices[7]);
+		Vertices.Add(NewVertices[6]);
+		Vertices.Add(NewVertices[2]);
+		Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+		Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+		Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+		Normals.Add(FVector(0.0f, -1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(1.0f, 0.0f, 0.0f));
+		Vertices.Add(NewVertices[3]);
+		Vertices.Add(NewVertices[7]);
+		Vertices.Add(NewVertices[6]);
+		Vertices.Add(NewVertices[2]);
+		Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+		Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+		Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+		Normals.Add(FVector(0.0f, 1.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+		Tangents.Add(FRuntimeMeshTangent(-1.0f, 0.0f, 0.0f));
+
+		count += 2;
+
+	}
+	for (int32 i = 0; i < count; ++i)
 	{
 		Triangles.Add(i * 4);
 		Triangles.Add(i * 4 + 1);
@@ -500,6 +935,6 @@ void ADungeonActor::RenderHallways(TArray<FVector> NewVertices, int32 SectionInd
 }
 void ADungeonActor::Generate()
 {
-	FDungeonAlg::JoyInit(PointLists,100,300.0f,NumOfTypes);
+	FDungeonAlg::JoyInit(PointLists,NumberOfRooms,SphereRadius,NumOfTypes,RoomsBorders,HubsBorders, HallwayWidth);
 }
 

@@ -7,13 +7,13 @@
 
 FSpaceSphereAlg* FSpaceSphereAlg::Runnable = NULL;
 
-FSpaceSphereAlg::FSpaceSphereAlg(uint8* NewTextureColors, uint32 NewmData,int NewHeight,int NewWidth,float StarsDensity,float StarsBrightness)
+FSpaceSphereAlg::FSpaceSphereAlg(uint8* NewTextureColors, uint32 NewmData,int NewHeight,int NewWidth,float StarsDensity,float StarsBrightness,FVector2D NebulaScaleRange)
 {
 	TextureColors = NewTextureColors;
 	mData = NewmData;
 	Height = NewHeight;
 	Width = NewWidth;
-
+	NSRange = NebulaScaleRange;
 	SDensity = StarsDensity;
 	SBrightness = StarsBrightness;
 	Thread = FRunnableThread::Create(this, TEXT("FSpaceSphereAlg"), 0, TPri_AboveNormal);
@@ -59,10 +59,9 @@ float FSpaceSphereAlg::NebulaNoise(FVector2D P,PerlinNoise& PN)
 	return PN.Noise(P.X + Displace, P.Y+Displace,0.0f);
 }
 
-uint8* FSpaceSphereAlg::GenerateNebulas(float Density, float Falloff)
+uint8* FSpaceSphereAlg::GenerateNebulas(float Density, float Falloff,float Scale)
 {
 	float n;
-	float Scale = FMath::FRandRange(0.001f, 0.003f);
 	uint8 * NewColors = TextureColors;
 	FLinearColor OldColor,NewColor;
 	PerlinNoise PN;
@@ -95,15 +94,18 @@ uint8* FSpaceSphereAlg::GenerateNebulas(float Density, float Falloff)
 
 bool FSpaceSphereAlg::Init()
 {
+	double Secs = FTimespan(FDateTime::Now().GetTicks()).GetTotalSeconds();
+	int32 Seed = (int32)(((int64)Secs) % INT_MAX);
+	FMath::RandInit(Seed);
 	return true;
 }
 
 uint32 FSpaceSphereAlg::Run()
 {
-	FPlatformProcess::Sleep(0.03);
+	FPlatformProcess::Sleep(0.02);
 	
 	
-	TextureColors=GenerateNebulas(FMath::FRandRange(0.0f,0.2f), FMath::FRandRange(3.0, 5.0f));
+	TextureColors=GenerateNebulas(FMath::FRandRange(0.0f,0.2f), FMath::FRandRange(3.0, 5.0f), FMath::FRandRange(NSRange.X, NSRange.Y));
 	
 	GeneratePointStars(SDensity, SBrightness);
 	bFinished = true;
@@ -137,11 +139,11 @@ bool FSpaceSphereAlg::IsThreadFinished()
 	return true;
 }
 
-FSpaceSphereAlg * FSpaceSphereAlg::JoyInit(uint8* NewTextureColors, uint32 NewmData, int NewHeight, int NewWidth, float StarsDensity, float StarsBrightness)
+FSpaceSphereAlg * FSpaceSphereAlg::JoyInit(uint8* NewTextureColors, uint32 NewmData, int NewHeight, int NewWidth, float StarsDensity, float StarsBrightness,FVector2D NebulaScaleRange)
 {
 	if (!Runnable && FPlatformProcess::SupportsMultithreading())
 	{
-		Runnable = new FSpaceSphereAlg(NewTextureColors,NewmData,NewHeight,NewWidth,StarsDensity,StarsBrightness);
+		Runnable = new FSpaceSphereAlg(NewTextureColors,NewmData,NewHeight,NewWidth,StarsDensity,StarsBrightness,NebulaScaleRange);
 	}
 	return Runnable;
 }

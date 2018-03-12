@@ -29,18 +29,19 @@ public:
 	static void Shutdown();
 
 	static bool IsThreadFinished();
-	static FSpaceSphereAlg* JoyInit(uint8* NewTextureColors, uint32 NewmData, int NewHeight, int NewWidth, float StarsDensity, float StarsBrightness);
-	FSpaceSphereAlg(uint8* NewTextureColors, uint32 NewmData, int NewHeight, int NewWidth, float StarsDensity, float StarsBrightness);
+	static FSpaceSphereAlg* JoyInit(uint8* NewTextureColors, uint32 NewmData, int NewHeight, int NewWidth, float StarsDensity, float StarsBrightness,FVector2D NebulaScaleRange);
+	FSpaceSphereAlg(uint8* NewTextureColors, uint32 NewmData, int NewHeight, int NewWidth, float StarsDensity, float StarsBrightness, FVector2D NebulaScaleRange);
 	~FSpaceSphereAlg();
 private:
 	void GeneratePointStars(float Density, float Brightness);
 	float NebulaNoise(FVector2D P, class PerlinNoise& PN);
-	uint8* GenerateNebulas(float Density, float Falloff);
+	uint8* GenerateNebulas(float Density, float Falloff,float Scale);
 	bool bFinished = false;
 	uint32 mData;
 	uint8* TextureColors;
 	int Height, Width;
 	float SDensity, SBrightness;
+	FVector2D NSRange;
 	FVector2D NOffset = { 100.0f,100.0f };
 
 

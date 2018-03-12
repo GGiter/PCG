@@ -122,6 +122,9 @@ TArray<FVector2D> FTrackAlg::GeneratePoints()
 
 bool FTrackAlg::Init()
 {
+	double Secs = FTimespan(FDateTime::Now().GetTicks()).GetTotalSeconds();
+	int32 Seed = (int32)(((int64)Secs) % INT_MAX);
+	FMath::RandInit(Seed);
 	return true;
 }
 

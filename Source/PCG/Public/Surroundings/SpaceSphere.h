@@ -33,10 +33,12 @@ private:
 	UTexture2D* mDynamicTexture;
 	UPROPERTY(EditAnywhere, meta = (AllowPrivateAcess = "true"))
 	UTexture2D* textureToReadFrom;
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAcess = "true"))
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAcess = "true"),Category = Galaxy)
 		float StarsDensity=0.003f;
-	UPROPERTY(EditAnywhere, meta = (AllowPrivateAcess = "true"))
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAcess = "true"),Category = Galaxy)
 		float StarsBrightness = 0.18f;
+	UPROPERTY(EditAnywhere, meta = (AllowPrivateAcess = "true"),Category=Galaxy)
+		FVector2D NebulaScaleRange = { 0.001f,0.003f };
 	uint32 mDataSize;
 	uint32 mDataSqrtSize;
 

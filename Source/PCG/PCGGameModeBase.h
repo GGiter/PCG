@@ -13,8 +13,10 @@ UCLASS()
 class PCG_API APCGGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
-	
+
+		virtual void InitGame(const FString & MapName,
+			const FString & Options,
+			FString & ErrorMessage) override;
 	
 	
 };

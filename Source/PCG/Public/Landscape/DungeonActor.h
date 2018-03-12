@@ -34,10 +34,19 @@ private:
 	void Render();
 	void GenerateGround(TArray<FVector> Vertices, int32 SectionIndex);
 	void RenderHallways(TArray<FVector> NewVertices, int32 SectionIndex);
+	void RenderRoom(TArray<FEdge> Edges,TArray<FVector> NewVertices, int32 SectionIndex);
 	TArray<TArray<FVector> > PointLists;
 	bool bC = false;
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int32 NumOfSections;
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float HallwayWidth=90.0f;
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		int32 NumberOfRooms = 150;
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float SphereRadius = 700.0f;
 	TArray<TArray<int32>> NumOfTypes;
-	
+	TArray<TArray<FEdge>> RoomsBorders;
+	TArray<TArray<FEdge>> HubsBorders;
+	TArray<int32> HubsIndexes, RoomsIndexes, HallwaysIndexes, GroundIndexes; //ColorIndexes
 };

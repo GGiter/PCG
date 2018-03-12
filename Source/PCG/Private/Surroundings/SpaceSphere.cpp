@@ -82,7 +82,8 @@ ASpaceSphere::ASpaceSphere()
 void ASpaceSphere::BeginPlay()
 {
 	Super::BeginPlay();
-	FSpaceSphereAlg::JoyInit(mDynamicColors,mDataSize,h,w,StarsDensity,StarsBrightness);
+	
+	FSpaceSphereAlg::JoyInit(mDynamicColors,mDataSize,h,w,StarsDensity,StarsBrightness,NebulaScaleRange);
 	
 }
 
