@@ -15,7 +15,7 @@ ADungeonActor::ADungeonActor()
 void ADungeonActor::BeginPlay()
 {
 	Super::BeginPlay();
-	Generate();
+	//Generate();
 }
 
 // Called every frame
@@ -935,6 +935,46 @@ void ADungeonActor::RenderRoom(TArray<FEdge> Edges, TArray<FVector> NewVertices,
 }
 void ADungeonActor::Generate()
 {
+	RuntimeMesh->ClearAllMeshSections();
+	PointLists.Empty();
+	NumOfTypes.Empty();
+	RoomsBorders.Empty();
+	HubsBorders.Empty();
+	HubsIndexes.Empty();
+	RoomsIndexes.Empty();
+	HallwaysIndexes.Empty();
+	GroundIndexes.Empty();
 	FDungeonAlg::JoyInit(PointLists,NumberOfRooms,SphereRadius,NumOfTypes,RoomsBorders,HubsBorders, HallwayWidth);
+	bC = false;
+}
+
+float ADungeonActor::GetHallwayWidth() const
+{
+	return HallwayWidth;
+}
+
+int32 ADungeonActor::GetNumberOfRooms() const
+{
+	return NumberOfRooms;
+}
+
+float ADungeonActor::GetSphereRadius() const
+{
+	return SphereRadius;
+}
+
+void ADungeonActor::SetHallwayWidth(float NewHallwayWidth)
+{
+	HallwayWidth = NewHallwayWidth;
+}
+
+void ADungeonActor::SetNumberOfRooms(int32 NewNumberOfRooms)
+{
+	NumberOfRooms = NewNumberOfRooms;
+}
+
+void ADungeonActor::SetSphereRadius(float NewSphereRadius)
+{
+	SphereRadius = NewSphereRadius;
 }
 

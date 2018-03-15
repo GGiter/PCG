@@ -70,36 +70,7 @@ void ADSMapGenerator::DrawMesh()
 			Triangles.Add(P3);
 		}
 	}
-	RuntimeMesh->CreateMeshSection(0, Vertices, Triangles, Normals, TextureCoordinates, VertexColors, Tangents);
-	//Delaunay* Triangulation = new Delaunay();
-	//TArray<FTriangle> TrianglesD = Triangulation->Triangulate(PointList);
-	//UE_LOG(LogTemp, Warning, TEXT("%d"), TrianglesD.Num());
-	/*
-	TArray<FEdgeD> EdgesD = Triangulation.GetEdges();
-	TArray<FVector> Vertices = Triangulation.GetVertices();
-	TArray<FVector> Normals;
-	TArray<FRuntimeMeshTangent> Tangents;
-	TArray<FColor> VertexColors;
-	TArray<FVector2D> TextureCoordinates;
-	TArray<int32> Triangles;
-	for (FEdgeD Edge : EdgesD)
-	{
-		
-		
-		
-	
-		Triangles.Add(Vertices.Find(Edge.P1));
-		Triangles.Add(Vertices.Find(Edge.P2));
-
-		
-		//DrawDebugPoint(GetWorld(), Edge.P1, 2.0f, FColor(255, 0, 0), true, -1, 0);
-		//DrawDebugLine(GetWorld(), { 0.0f,0.0f,0.0f }, { 2000.0f,2000.0f,2000.0f }, FColor(255, 0, 0), true, -1, 0);
-	}
-	
-
-	*/
-
-	
+	RuntimeMesh->CreateMeshSection(0, Vertices, Triangles, Normals, TextureCoordinates, VertexColors, Tangents);	
 }
 
 void ADSMapGenerator::Divide(float Size)
@@ -166,6 +137,9 @@ void ADSMapGenerator::Tick(float DeltaTime)
 
 void ADSMapGenerator::Generate()
 {
+	RuntimeMesh->ClearAllMeshSections();
+	HeightMap.Empty();
+	PointList.Empty();
 	WorldSize = FMath::Pow(2, Detail) + 1.0f;
 	Max = WorldSize - 1.0f;
 	HeightMap.Add(TPair<float, float>(0.0f, 0.0f), Max / 2.0f);
@@ -174,5 +148,35 @@ void ADSMapGenerator::Generate()
 	HeightMap.Add(TPair<float, float>(0.0f, Max), Max / 2.0f);
 	Divide(Max);
 	DrawMesh();
+}
+
+void ADSMapGenerator::SetLandscapeScale()
+{
+	RuntimeMesh->SetRelativeScale3D(LandscapeScale);
+}
+
+void ADSMapGenerator::SetDetail(float  NewDetail)
+{
+	Detail = NewDetail;
+}
+
+void ADSMapGenerator::SetRoughness(float  NewRoughness)
+{
+	Roughness = NewRoughness;
+}
+
+float ADSMapGenerator::GetDetail() const
+{
+	return Detail;
+}
+
+float ADSMapGenerator::GetRoughness() const
+{
+	return Roughness;
+}
+
+FName ADSMapGenerator::GetLandscapeName() const
+{
+	return LandscapeName;
 }
 

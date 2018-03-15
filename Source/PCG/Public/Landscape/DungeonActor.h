@@ -20,6 +20,19 @@ public:
 		void Generate();
 	UFUNCTION(BlueprintImplementableEvent)
 		void SetColors();
+	UFUNCTION(BlueprintPure)
+		float GetHallwayWidth() const;
+	UFUNCTION(BlueprintPure)
+		int32 GetNumberOfRooms() const;
+	UFUNCTION(BlueprintPure)
+		float GetSphereRadius() const;
+	UFUNCTION(BlueprintCallable)
+		void SetHallwayWidth(float NewHallwayWidth);
+	UFUNCTION(BlueprintCallable)
+		void SetNumberOfRooms(int32 NewNumberOfRooms);
+	UFUNCTION(BlueprintCallable)
+		void SetSphereRadius(float NewSphereRadius);
+	
 
 protected:
 	// Called when the game starts or when spawned
@@ -36,7 +49,7 @@ private:
 	void RenderHallways(TArray<FVector> NewVertices, int32 SectionIndex);
 	void RenderRoom(TArray<FEdge> Edges,TArray<FVector> NewVertices, int32 SectionIndex);
 	TArray<TArray<FVector> > PointLists;
-	bool bC = false;
+	bool bC = true;
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		int32 NumOfSections;
 	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))

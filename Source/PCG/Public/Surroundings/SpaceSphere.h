@@ -16,6 +16,19 @@ class PCG_API ASpaceSphere : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ASpaceSphere();
+	UFUNCTION(BlueprintCallable)
+		void SetStarsDensity(float NewStarsDensity);
+	UFUNCTION(BlueprintCallable)
+		void SetStarsBrightness(float NewStarsBrightness);
+	UFUNCTION(BlueprintCallable)
+		void SetNebulaScaleRange(FVector2D NewNebulaScaleRange);
+	UFUNCTION(BlueprintPure)
+		float GetStarsDensity() const;
+	UFUNCTION(BlueprintPure)
+		float GetStarsBrightness() const;
+	UFUNCTION(BlueprintPure)
+		FVector2D GetNebulaScaleRange() const;
+
 
 protected:
 	// Called when the game starts or when spawned
@@ -27,7 +40,9 @@ public:
 	virtual void PostInitializeComponents() override;
 	void UpdateMaterial();
 	UFUNCTION(BlueprintCallable)
-		void Test();
+		void Generate();
+	UFUNCTION(BlueprintCallable)
+		void ClearMaterial();
 private:
 	TArray<UMaterialInstanceDynamic*> mDynamicMaterials;
 	UTexture2D* mDynamicTexture;
@@ -48,6 +63,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAcess = "true"))
 		UStaticMeshComponent* StaticMeshComponent;
-	bool bC = false;
+	bool bC = true;
 	int32 w, h;
 };

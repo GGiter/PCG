@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "PerlinMap.h"
-#include "PerlinNoise.h"
+#include "Public/Utilitys/PerlinNoise.h"
+
 
 // Sets default values
 APerlinMap::APerlinMap()
@@ -13,8 +14,39 @@ APerlinMap::APerlinMap()
 }
 void APerlinMap::Generate()
 {
+	PointList.Empty();
+	Terrain.Empty();
 	GenerateHeightMap();
+	RuntimeMesh->ClearAllMeshSections();
 	RenderLandscape();
+}
+void APerlinMap::SetRows(int32  NewRows)
+{
+	Rows = NewRows;
+}
+void APerlinMap::SetColumns(int32  NewColumns)
+{
+	Columns = NewColumns;
+}
+void APerlinMap::SetBlockWidth(float  NewBlockWidth)
+{
+	BlockWidth = NewBlockWidth;
+}
+int32 APerlinMap::GetRows() const
+{
+	return Rows;
+}
+int32 APerlinMap::GetColumns() const
+{
+	return Columns;
+}
+float APerlinMap::GetBlockWidth() const
+{
+	return BlockWidth;
+}
+FName APerlinMap::GetLandscapeName() const
+{
+	return LandscapeName;
 }
 void APerlinMap::GenerateHeightMap()
 {

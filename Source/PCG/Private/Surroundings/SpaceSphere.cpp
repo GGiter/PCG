@@ -78,12 +78,42 @@ ASpaceSphere::ASpaceSphere()
 	textureToReadFrom = BlackText.Object;
 }
 
+void ASpaceSphere::SetStarsDensity(float NewStarsDensity)
+{
+	StarsDensity = NewStarsDensity;
+}
+
+void ASpaceSphere::SetStarsBrightness(float NewStarsBrightness)
+{
+	StarsBrightness = NewStarsBrightness;
+}
+
+void ASpaceSphere::SetNebulaScaleRange(FVector2D NewNebulaScaleRange)
+{
+	NebulaScaleRange = NewNebulaScaleRange;
+}
+
+float ASpaceSphere::GetStarsDensity() const
+{
+	return StarsDensity;
+}
+
+float ASpaceSphere::GetStarsBrightness() const
+{
+	return StarsBrightness;
+}
+
+FVector2D ASpaceSphere::GetNebulaScaleRange() const
+{
+	return NebulaScaleRange;
+}
+
 // Called when the game starts or when spawned
 void ASpaceSphere::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	FSpaceSphereAlg::JoyInit(mDynamicColors,mDataSize,h,w,StarsDensity,StarsBrightness,NebulaScaleRange);
+	
 	
 }
 
@@ -147,17 +177,17 @@ void ASpaceSphere::UpdateMaterial()
 	mDynamicMaterials[0]->SetTextureParameterValue("DynamicTextureParam", mDynamicTexture);
 }
 
-void ASpaceSphere::Test()
+void ASpaceSphere::Generate()
+{
+	ClearMaterial();
+	FSpaceSphereAlg::JoyInit(mDynamicColors, mDataSize, h, w, StarsDensity, StarsBrightness, NebulaScaleRange);
+	bC = false;
+}
+void ASpaceSphere::ClearMaterial()
 {
 	if (mDynamicColors)
 	{
-		mDynamicColors[0] = 255; // Set the Blue channel in pixel nr. 0 to 255
-		mDynamicColors[1] = 120; // Set the Green channel in pixel nr. 0 to 120
-		mDynamicColors[2] = 120; // Set the Red channel in pixel nr. 0 to 120
-		mDynamicColors[3] = 120; // Set the Alpha channel in pixel nr. 0 to 120
-		mDynamicColors[4] = 120; // Set the Blue channel in pixel nr. 1 to 120
-								 // etc etc
-								 // Array example:
+		
 		int pixelAmount = mDataSize / 4;
 		for (int i = 0; i < pixelAmount; ++i)
 		{
@@ -165,7 +195,9 @@ void ASpaceSphere::Test()
 			int green = i * 4 + 1;
 			int red = i * 4 + 2;
 			int alpha = i * 4 + 3;
-			mDynamicColors[red] = 255; // Set pixel's red value to 120
+			mDynamicColors[red] = 0; 
+			mDynamicColors[green] = 0;
+			mDynamicColors[blue] = 0;
 		}
 		UpdateMaterial();
 	}

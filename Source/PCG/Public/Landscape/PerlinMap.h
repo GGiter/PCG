@@ -19,6 +19,20 @@ public:
 	void RenderLandscape();
 	UFUNCTION(BlueprintCallable)
 	void Generate();
+	UFUNCTION(BlueprintCallable)
+		void SetRows(int32 NewRows);
+	UFUNCTION(BlueprintCallable)
+		void SetColumns(int32 NewColumns);
+	UFUNCTION(BlueprintCallable)
+		void SetBlockWidth(float NewBlockWidth);
+	UFUNCTION(BlueprintPure)
+		int32 GetRows() const;
+	UFUNCTION(BlueprintPure)
+		int32 GetColumns() const;
+	UFUNCTION(BlueprintPure)
+		float GetBlockWidth() const;
+	UFUNCTION(BlueprintPure)
+		FName GetLandscapeName() const;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -26,13 +40,16 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		int32 Rows;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		int32 Columns;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-		float BlockWidth;
+
 private:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		int32 Rows;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		int32 Columns;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		float BlockWidth;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FName LandscapeName;
 	UPROPERTY(VisibleAnywhere,BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 		URuntimeMeshComponent* RuntimeMesh;
 	TArray<float> Terrain;

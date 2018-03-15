@@ -18,6 +18,21 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	UFUNCTION(BlueprintCallable)
 	void Generate();
+	UFUNCTION(BlueprintCallable)
+		void SetLandscapeScale();
+	UFUNCTION(BlueprintCallable)
+		void SetDetail(float NewDetail);
+	UFUNCTION(BlueprintCallable)
+		void SetRoughness(float NewRoughness);
+	UFUNCTION(BlueprintPure)
+		float GetDetail() const;
+	UFUNCTION(BlueprintPure)
+		float GetRoughness() const;
+	UFUNCTION(BlueprintPure)
+		FName GetLandscapeName() const;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+		FVector LandscapeScale;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -32,10 +47,14 @@ private:
 	UParticleSystem* PSC;
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
 	URuntimeMeshComponent* RuntimeMesh;
-	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	float Detail=3.0f;
-	UPROPERTY(EditDefaultsOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	float Roughness=0.7f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+		FVector Scale = { 1.0f,1.0f,1.0f };
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	FName LandscapeName="DiamondSquare Fractal";
 	
 	float WorldSize;
 	float Max;
