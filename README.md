@@ -1,4 +1,5 @@
-Program PCG contains:
+Application PCG contains:
+
 1.Fractal generator done by implementing L-System in Unreal Engine enviroment and by using recursion.
 
 HilbertCurve3D
