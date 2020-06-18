@@ -3,8 +3,7 @@
 #include "DungeonAlg.h"
 #include "Runtime/Core/Public/HAL/RunnableThread.h"
 #include "Kismet/GameplayStatics.h"
-#include <ctime>
-#include <cstdlib>
+
 
 
 FDungeonAlg* FDungeonAlg::Runnable = NULL;
@@ -34,36 +33,26 @@ bool FDungeonAlg::Init()
 uint32 FDungeonAlg::Run()
 {
 	FPlatformProcess::Sleep(0.03);
-	UE_LOG(LogTemp, Warning, TEXT("Starting Genrera"));
 	TArray<FBox2D> Temp;
 	for (FBox2D Cell : Cells)
 	{
 		FVector2D Seperation = SeperateCells(Cell);
 		FVector2D Cohesion = CohaseCells(Cell);
-	//	UE_LOG(LogTemp, Warning, TEXT("Move %s"), *CentreOfCell(Cell).ToString());
 
 		Cell=Cell.ShiftBy(Seperation*30.0f + Cohesion * 5.0f);
-		//MoveCell(MoveVector*2.0f, NewCells[i]);
 		Temp.Add(Cell);
 	}
 	Cells = Temp;
-	for (FBox2D Cell : Hubs)
-	{
 
-
-		//MoveCell(MoveVector*2.0f, NewCells[i]);
-	//	UE_LOG(LogTemp, Warning, TEXT("Move2 %s"), *CentreOfCell(Cell).ToString());
-	}
-	//SeperateCells(Cells);
+	SeperateCells(Cells);
 	DetermineMainHubs();
 	TArray<FBox2D> Rooms;
 	TArray<FBox2D> Hallways = CreateHallways(GenerateGraph(),Rooms);
 	
 	Rooms.Append(FindHallwaysRooms(Hallways));
-	UE_LOG(LogTemp, Warning, TEXT("Genrera %d"), Hubs.Num());
-	//ShortenHallways(Rooms, Hallways);
+	ShortenHallways(Rooms, Hallways);
 
-	//SeperateCells(Hubs);
+	SeperateCells(Hubs);
 	int32 index = 0;
 	TArray<int32> TypesTemp;
 	TypesTemp.Add(index);
@@ -80,8 +69,6 @@ uint32 FDungeonAlg::Run()
 	TypesTemp.Add(index - 1);
 	NumOfTypes->Add(TypesTemp);
 	TypesTemp.Empty();
-
-	
 	TypesTemp.Add(index);
 	
 	for (FBox2D Room : Rooms)
@@ -113,7 +100,6 @@ uint32 FDungeonAlg::Run()
 	TypesTemp.Add(index - 1);
 	
 	NumOfTypes->Add(TypesTemp);
-	UE_LOG(LogTemp, Warning, TEXT("Genrera %d"), Locations->Num());
 	bFinished = true;
 	return 0;
 }
@@ -231,11 +217,8 @@ FVector2D FDungeonAlg::SeperateCells(FBox2D& Cell)
 			{
 				MoveVector /= (NeighbourCount);
 				MoveVector *= -1;
-				//MoveVector.Normalize(1);
 				return MoveVector;
-				//UE_LOG(LogTemp, Warning, TEXT("Move %s"), *CentreOfCell(NewCells[i]).ToString());
-				//MoveCell(MoveVector*2.0f, NewCells[i]);
-				//UE_LOG(LogTemp, Warning, TEXT("Move2 %s"), *CentreOfCell(NewCells[i]).ToString());
+
 			}
 			else
 				return FVector2D(0.0f, 0.0f);
@@ -293,8 +276,8 @@ void FDungeonAlg::ShortenHallways(TArray<FBox2D>& Rooms, TArray<FBox2D>& Hallway
 		{
 			if (Rooms[i].Intersect(Hallways[j]))
 			{		
-				//Ans.Append(ShortenHallway(Hallways[j], Rooms[i]));	
-				//Hallways.Append(ShortenHallway(Hallways[j], Rooms[i]));
+				Ans.Append(ShortenHallway(Hallways[j], Rooms[i]));	
+				Hallways.Append(ShortenHallway(Hallways[j], Rooms[i]));
 				ToRemove.Add(Hallways[j]);
 			}
 		}
@@ -303,15 +286,11 @@ void FDungeonAlg::ShortenHallways(TArray<FBox2D>& Rooms, TArray<FBox2D>& Hallway
 			Hallways.Remove(ToRemove[j]);
 		}
 	}
-	//Hallways = Ans;
+	Hallways = Ans;
 	Ans.Empty();
 	for (FBox2D Hallway : Hallways)
 	{
-		if (Hallway.GetSize().X < 80.0f || Hallway.GetSize().Y < 80.0f)
-		{
-
-		}
-		else
+		if (!(Hallway.GetSize().X < 80.0f || Hallway.GetSize().Y < 80.0f))
 		{
 			Ans.Add(Hallway);
 		}
@@ -493,7 +472,7 @@ TArray<FBox2D> FDungeonAlg::CreateHallways(TArray<FEdgeD> TreeEdges,TArray<FBox2
 	
 	for (FEdgeD Edge : TreeEdges)
 	{
-		//Edge = FEdgeD(FVector2D(FMath::RoundToFloat(Edge.P1.X), FMath::RoundToFloat(Edge.P1.Y)), FVector2D(FMath::RoundToFloat(Edge.P2.X), FMath::RoundToFloat(Edge.P2.Y)));
+		
 		if (Edge.P1.X==Edge.P2.X)
 		{
 			HallwaysEdges.Add(Edge);
@@ -698,7 +677,6 @@ TArray<FBox2D> FDungeonAlg::BuildHallways(TArray<FBox2D> Rooms, FBox2D Hallway)
 			Ans.Add(FBox2D(FVector2D(Hallway.Min.X, Rooms[i].Max.Y), FVector2D(Hallway.Max.X, Rooms[i + 1].Min.Y)));
 			
 			Borders.Add(FEdge( FVector(Hallway.Min.X, Rooms[i].Max.Y, 100.0f), FVector(Hallway.Max.X, Rooms[i].Max.Y, 100.0f)));
-			//Borders.Swap(0, 1);
 			RoomsBorders->Add(Borders);
 			Borders.Empty();
 			Borders.Add(FEdge( FVector(Hallway.Min.X, Rooms[i + 1].Min.Y, 100.0f), FVector(Hallway.Max.X, Rooms[i + 1].Min.Y, 100.0f)));
@@ -706,7 +684,6 @@ TArray<FBox2D> FDungeonAlg::BuildHallways(TArray<FBox2D> Rooms, FBox2D Hallway)
 		}
 		Ans.Add(FBox2D(FVector2D(Hallway.Min.X, Rooms[Rooms.Num()-1].Max.Y), Hallway.Max));
 		Borders.Add(FEdge(FVector(Hallway.Min.X, Rooms[Rooms.Num() - 1].Max.Y, 100.0f), FVector(Hallway.Max.X, Rooms[Rooms.Num() - 1].Max.Y, 100.0f)));
-		//Borders.Swap(0, 1);
 		RoomsBorders->Add(Borders);
 	}
 	else if (Hallway.GetSize().Y == HallwayWidth)
